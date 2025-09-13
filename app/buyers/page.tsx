@@ -1,9 +1,8 @@
 "use client";
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
-export const dynamic = "force-dynamic"; // ⛔ avoid prerender
-export const fetchCache = "force-no-store"; // ⛔ avoid caching
-
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -20,7 +19,7 @@ type Buyer = {
   updatedAt: string;
 };
 
-export default function BuyersPage() {
+function BuyersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -28,12 +27,10 @@ export default function BuyersPage() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
-  // dropdown values
   const [cities, setCities] = useState<string[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
 
-  // URL state
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [city, setCity] = useState(searchParams.get("city") || "");
   const [propertyType, setPropertyType] = useState(
@@ -43,7 +40,6 @@ export default function BuyersPage() {
   const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
   const limit = 10;
 
-  // ✅ Debounce search
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -52,7 +48,6 @@ export default function BuyersPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // ✅ Fetch dropdowns
   useEffect(() => {
     async function fetchDropdowns() {
       try {
@@ -61,10 +56,7 @@ export default function BuyersPage() {
           fetch("/api/buyers/property-types"),
           fetch("/api/buyers/statuses"),
         ]);
-
-        if (!cRes.ok || !pRes.ok || !sRes.ok) {
-          throw new Error("Failed to fetch dropdown values");
-        }
+        if (!cRes.ok || !pRes.ok || !sRes.ok) throw new Error("Failed to fetch dropdown values");
 
         const [cData, pData, sData] = await Promise.all([
           cRes.json(),
@@ -82,7 +74,6 @@ export default function BuyersPage() {
     fetchDropdowns();
   }, []);
 
-  // ✅ Fetch buyers
   useEffect(() => {
     async function fetchBuyers() {
       setLoading(true);
@@ -110,7 +101,6 @@ export default function BuyersPage() {
     }
     fetchBuyers();
 
-    // ✅ Update URL (client-only)
     const newParams = new URLSearchParams();
     if (debouncedSearch) newParams.set("search", debouncedSearch);
     if (city) newParams.set("city", city);
@@ -197,7 +187,6 @@ export default function BuyersPage() {
         </select>
       </div>
 
-      {/* Buyers Table */}
       {loading ? (
         <p>Loading buyers...</p>
       ) : buyers.length === 0 ? (
@@ -244,7 +233,6 @@ export default function BuyersPage() {
             </tbody>
           </table>
 
-          {/* Pagination */}
           <div className="flex justify-between items-center mt-4">
             <button
               disabled={page === 1}
@@ -267,5 +255,13 @@ export default function BuyersPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function BuyersPage() {
+  return (
+    <Suspense fallback={<p>Loading buyers page...</p>}>
+      <BuyersPageContent />
+    </Suspense>
   );
 }
