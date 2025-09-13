@@ -1,10 +1,11 @@
 "use client";
-export const dynamic = "force-dynamic";
+
+export const dynamic = "force-dynamic"; // ⛔ avoid prerender
+export const fetchCache = "force-no-store"; // ⛔ avoid caching
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-
-
 
 type Buyer = {
   id: string;
@@ -27,7 +28,7 @@ export default function BuyersPage() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
-  // dynamic dropdown values
+  // dropdown values
   const [cities, setCities] = useState<string[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
@@ -51,7 +52,7 @@ export default function BuyersPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // ✅ Fetch dropdown values once
+  // ✅ Fetch dropdowns
   useEffect(() => {
     async function fetchDropdowns() {
       try {
@@ -109,7 +110,7 @@ export default function BuyersPage() {
     }
     fetchBuyers();
 
-    // ✅ Sync URL (without reload)
+    // ✅ Update URL (client-only)
     const newParams = new URLSearchParams();
     if (debouncedSearch) newParams.set("search", debouncedSearch);
     if (city) newParams.set("city", city);
@@ -147,7 +148,6 @@ export default function BuyersPage() {
           className="border p-2 w-full rounded"
         />
 
-        {/* Cities from DB */}
         <select
           value={city}
           onChange={(e) => {
@@ -164,7 +164,6 @@ export default function BuyersPage() {
           ))}
         </select>
 
-        {/* Property Types from DB */}
         <select
           value={propertyType}
           onChange={(e) => {
@@ -181,7 +180,6 @@ export default function BuyersPage() {
           ))}
         </select>
 
-        {/* Statuses from DB */}
         <select
           value={status}
           onChange={(e) => {
