@@ -58,11 +58,17 @@ export default function BuyersPage() {
           fetch("/api/buyers/property-types"),
           fetch("/api/buyers/statuses"),
         ]);
+
+        if (!cRes.ok || !pRes.ok || !sRes.ok) {
+          throw new Error("Failed to fetch dropdown values");
+        }
+
         const [cData, pData, sData] = await Promise.all([
           cRes.json(),
           pRes.json(),
           sRes.json(),
         ]);
+
         if (cData.success) setCities(cData.cities);
         if (pData.success) setPropertyTypes(pData.propertyTypes);
         if (sData.success) setStatuses(sData.statuses);
@@ -88,11 +94,11 @@ export default function BuyersPage() {
         if (status) params.set("status", status);
 
         const res = await fetch(`/api/buyers?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to fetch buyers");
         const data = await res.json();
-        if (res.ok) {
-          setBuyers(data.buyers || []);
-          setTotal(data.pagination?.total || 0);
-        }
+
+        setBuyers(data.buyers || []);
+        setTotal(data.pagination?.total || 0);
       } catch (err) {
         console.error("Error fetching buyers:", err);
       } finally {
@@ -101,15 +107,16 @@ export default function BuyersPage() {
     }
     fetchBuyers();
 
-    // ✅ Sync URL
+    // ✅ Sync URL (without reload)
     const newParams = new URLSearchParams();
     if (debouncedSearch) newParams.set("search", debouncedSearch);
     if (city) newParams.set("city", city);
     if (propertyType) newParams.set("propertyType", propertyType);
     if (status) newParams.set("status", status);
     newParams.set("page", page.toString());
+
     router.replace(`/buyers?${newParams.toString()}`);
-  }, [debouncedSearch, city, propertyType, status, page]);
+  }, [debouncedSearch, city, propertyType, status, page, router]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -225,7 +232,7 @@ export default function BuyersPage() {
                   <td className="border px-4 py-2">{b.city}</td>
                   <td className="border px-4 py-2">{b.propertyType}</td>
                   <td className="border px-4 py-2">
-                    {b.budgetMin} - {b.budgetMax}
+                    {b.budgetMin ?? "-"} - {b.budgetMax ?? "-"}
                   </td>
                   <td className="border px-4 py-2">{b.timeline}</td>
                   <td className="border px-4 py-2">{b.status}</td>
@@ -247,10 +254,10 @@ export default function BuyersPage() {
               Prev
             </button>
             <span>
-              Page {page} of {totalPages}
+              Page {page} of {totalPages || 1}
             </span>
             <button
-              disabled={page === totalPages}
+              disabled={page === totalPages || totalPages === 0}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               className="px-4 py-2 border rounded disabled:opacity-50"
             >
