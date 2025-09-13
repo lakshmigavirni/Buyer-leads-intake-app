@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Buyer {
+  id           String   @id @default(uuid())
+  fullName     String
+  email        String?
+  phone        String
+  city         String
+  propertyType String
+  bhk          String?
+  purpose      String
+  budgetMin    Int?
+  budgetMax    Int?
+  timeline     String
+  source       String
+  status       String   @default("New")
+  notes        String? // general notes field (still fine to keep)
+  tags         String?
+  ownerId      String
+  updatedAt    DateTime @updatedAt
+
+  history    BuyerHistory[] // relation
+  buyerNotes BuyerNote[] // 👈 back-relation added
+}
+
+model BuyerNote {
+  id        String   @id @default(uuid())
+  buyerId   String
+  content   String
+  createdAt DateTime @default(now())
+  createdBy String
+
+  buyer Buyer @relation(fields: [buyerId], references: [id])
+}
+
+model BuyerHistory {
+  id        String   @id @default(uuid())
+  buyerId   String
+  changedBy String
+  changedAt DateTime @default(now())
+  diff      Json // store { field: { old, new } }
+
+  buyer Buyer @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+}
+
+enum City {
+  Chandigarh
+  Mohali
+  Zirakpur
+  Panchkula
+  Other
+}
+
+enum PropertyType {
+  Apartment
+  Villa
+  Plot
+  Office
+  Retail
+}
+
+enum BHK {
+  STUDIO
+  ONE
+  TWO
+  THREE
+  FOUR
+}
+
+enum Purpose {
+  Buy
+  Rent
+}
+
+// ✅ Fixed names + mapping to keep original display values
+enum Timeline {
+  M0_3      @map("0-3m")
+  M3_6      @map("3-6m")
+  M6_PLUS   @map(">6m")
+  EXPLORING
+}
+
+enum Source {
+  Website
+  Referral
+  Walk_in  @map("Walk-in")
+  Call
+  Other
+}
+
+enum Status {
+  New
+  Qualified
+  Contacted
+  Visited
+  Negotiation
+  Converted
+  Dropped
+}
