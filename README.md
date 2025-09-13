@@ -97,6 +97,6 @@ Stores freeform notes per buyer.
 
 ### 1. Clone repo & install dependencies
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/lakshmigavirni/Buyer-leads-intake-app.git
 cd buyer-leads-intake-app
 npm install
