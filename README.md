@@ -100,3 +100,12 @@ Stores freeform notes per buyer.
 git clone https://github.com/lakshmigavirni/Buyer-leads-intake-app.git
 cd buyer-leads-intake-app
 npm install
+2. Setup environment
+
+Create a .env file in the project root:
+DATABASE_URL="file:./dev.db"
+Run Prisma migrations (to create schema)
+npx prisma migrate dev --name init
+Start the app
+npm run dev
+App runs at → http://localhost:3000
